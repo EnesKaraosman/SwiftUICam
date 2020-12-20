@@ -617,43 +617,10 @@ extension CameraViewController: AVCapturePhotoCaptureDelegate {
             // For now, it is only right
             let image = UIImage(cgImage: cgImageRef!, scale: 1, orientation: .right)
             
-            //2 options to save
-            //First is to use UIImageWriteToSavedPhotosAlbum
-            guard let croppedImage = cropToSquareImage(image: image)
-            else { return }
-            
-            savePhoto(croppedImage)
-            //Second is adapting Apple documentation with data of the modified image
-            //savePhoto(image.jpegData(compressionQuality: 1)!)
-            
-            
             DispatchQueue.main.async {
                 self.delegate?.didFinishProcessingPhoto(image)
             }
         }
-    }
-    
-    private func cropToSquareImage(image: UIImage) -> UIImage? {
-        var resizedImage: UIImage? = image
-        let imageSize = image.size
-        let width = imageSize.width
-        let height = imageSize.height
-        if (width != height) {
-            let newDimension = min(width, height)
-            let widthOffset = (width - newDimension) / 2
-            let heightOffset = (height - newDimension) / 2
-            UIGraphicsBeginImageContextWithOptions(
-                CGSize(width: newDimension, height: newDimension), false, 0.0
-            )
-            resizedImage?.draw(
-                at: .init(x: -widthOffset, y: -heightOffset),
-                blendMode: .copy,
-                alpha: 1
-            )
-            resizedImage = UIGraphicsGetImageFromCurrentImageContext()
-            UIGraphicsEndImageContext()
-        }
-        return resizedImage
     }
     
 }

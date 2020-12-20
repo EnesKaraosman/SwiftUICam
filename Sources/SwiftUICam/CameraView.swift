@@ -8,6 +8,7 @@
 
 import SwiftUI
 import AVFoundation
+import class UIKit.UIImage
 
 // MARK: CameraView
 public struct CameraView: UIViewControllerRepresentable {
@@ -25,6 +26,8 @@ public struct CameraView: UIViewControllerRepresentable {
     private var pinchToZoom: Bool
     private var tapToFocus: Bool
     private var doubleTapCameraSwitch: Bool
+    
+    private var onPhotoCaptured: ((UIImage) -> Void)?
     
     public init(events: UserEvents, applicationName: String, preferredStartingCameraType: AVCaptureDevice.DeviceType = .builtInWideAngleCamera, preferredStartingCameraPosition: AVCaptureDevice.Position = .back, focusImage: String? = nil, pinchToZoom: Bool = true, tapToFocus: Bool = true, doubleTapCameraSwitch: Bool = true) {
         self.events = events
@@ -109,8 +112,8 @@ public struct CameraView: UIViewControllerRepresentable {
             }
             
         public func didFinishProcessingPhoto(_ image: UIImage) {
-                //Not yet implemented
-            }
+            parent.onPhotoCaptured?(image)
+        }
             
         public func didFinishSavingWithError(_ image: UIImage, error: NSError?, contextInfo: UnsafeRawPointer) {
                 //Not yet implemented
@@ -143,6 +146,11 @@ public struct CameraView: UIViewControllerRepresentable {
                 print("Change maximumVideoDuration to \(duration)")
             }
     }
+    
+    public func onPhotoCaptured(_ action: @escaping (UIImage) -> Void) -> Self {
+        then({ $0.onPhotoCaptured = action })
+    }
+    
 }
 
 
