@@ -90,7 +90,7 @@ public class CameraViewController: UIViewController {
     
     /// Sets whether or not video recordings will record audio
     /// Setting to true will prompt user for access to microphone on View Controller launch.
-    public var audioEnabled = true
+    public var audioEnabled = false
     
     // MARK: Public Get-only Variable Declarations
     
@@ -370,17 +370,19 @@ public class CameraViewController: UIViewController {
         }
         
         // Add an audio input device.
-        do {
-            let audioDevice = AVCaptureDevice.default(for: .audio)
-            let audioDeviceInput = try AVCaptureDeviceInput(device: audioDevice!)
-            
-            if session.canAddInput(audioDeviceInput) {
-                session.addInput(audioDeviceInput)
-            } else {
-                print("Could not add audio device input to the session")
+        if audioEnabled {
+            do {
+                let audioDevice = AVCaptureDevice.default(for: .audio)
+                let audioDeviceInput = try AVCaptureDeviceInput(device: audioDevice!)
+
+                if session.canAddInput(audioDeviceInput) {
+                    session.addInput(audioDeviceInput)
+                } else {
+                    print("Could not add audio device input to the session")
+                }
+            } catch {
+                print("Could not create audio device input: \(error)")
             }
-        } catch {
-            print("Could not create audio device input: \(error)")
         }
         
         // Add the photo output.
@@ -617,7 +619,10 @@ extension CameraViewController: AVCapturePhotoCaptureDelegate {
             
             //2 options to save
             //First is to use UIImageWriteToSavedPhotosAlbum
-            savePhoto(image)
+            guard let croppedImage = cropToSquareImage(image: image)
+            else { return }
+            
+            savePhoto(croppedImage)
             //Second is adapting Apple documentation with data of the modified image
             //savePhoto(image.jpegData(compressionQuality: 1)!)
             
@@ -627,6 +632,30 @@ extension CameraViewController: AVCapturePhotoCaptureDelegate {
             }
         }
     }
+    
+    private func cropToSquareImage(image: UIImage) -> UIImage? {
+        var resizedImage: UIImage? = image
+        let imageSize = image.size
+        let width = imageSize.width
+        let height = imageSize.height
+        if (width != height) {
+            let newDimension = min(width, height)
+            let widthOffset = (width - newDimension) / 2
+            let heightOffset = (height - newDimension) / 2
+            UIGraphicsBeginImageContextWithOptions(
+                CGSize(width: newDimension, height: newDimension), false, 0.0
+            )
+            resizedImage?.draw(
+                at: .init(x: -widthOffset, y: -heightOffset),
+                blendMode: .copy,
+                alpha: 1
+            )
+            resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+        }
+        return resizedImage
+    }
+    
 }
 
 extension CameraViewController: AVCaptureFileOutputRecordingDelegate {
